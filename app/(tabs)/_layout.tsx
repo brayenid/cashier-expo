@@ -1,45 +1,81 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import React, { useEffect, useState } from 'react'
+import { config } from '@/constants/Config'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { Ionicons } from '@expo/vector-icons'
+import { Tabs } from 'expo-router'
+import { SQLiteProvider, useSQLiteContext } from 'expo-sqlite'
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+function TabsScreen() {
+  const { authState } = useAuth()
+  const db = useSQLiteContext()
+  const [users, setUsers] = useState<any[]>([])
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await db.getAllAsync('SELECT * FROM users;')
+        console.log('====================================')
+        console.log(data)
+        console.log('====================================')
+        setUsers(data)
+      } catch (error) {
+        console.error('Gagal ambil data:', error)
+      }
+    }
+
+    fetchData()
+  }, [db])
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        headerShown: false
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'POS',
+          tabBarIcon: ({ color }) => <Ionicons name="cash" color={color} size={18} />
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="masterdata"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Master Data',
+          tabBarIcon: ({ color }) => <Ionicons name="document" color={color} size={18} />
+        }}
+      />
+      <Tabs.Screen
+        name="menu"
+        options={{
+          title: 'Menu',
+          tabBarIcon: ({ color }) => <Ionicons name="grid" color={color} size={18} />
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: 'Akun',
+          tabBarIcon: ({ color }) => <Ionicons name="person" color={color} size={18} />
         }}
       />
     </Tabs>
-  );
+  )
+}
+
+export default function RootLayout() {
+  return (
+    <SQLiteProvider
+      databaseName="kitakasir-base"
+      options={{
+        libSQLOptions: {
+          url: config.db.url,
+          authToken: config.db.token
+        }
+      }}>
+      <AuthProvider>
+        <TabsScreen />
+      </AuthProvider>
+    </SQLiteProvider>
+  )
 }

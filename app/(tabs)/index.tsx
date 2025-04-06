@@ -1,74 +1,145 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import Container from '@/components/Container'
+import Search from '@/components/Pos/Search'
+import { dummyCategories, dummyData } from '@/lib/Dummy'
+import { cn, currencyFormat } from '@/lib/Helper'
+import { Ionicons } from '@expo/vector-icons'
+import { useState } from 'react'
+import { FlatList, Image, ImageSourcePropType, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
-export default function HomeScreen() {
+function Viewer({
+  title,
+  value,
+  img
+}: {
+  title: string
+  value: number
+  className?: string
+  img: ImageSourcePropType
+  productGetter?: any
+  productSetter?: any
+}) {
+  const [qty, setQty] = useState(0)
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: '#fafafa',
+        borderRadius: 8,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#eee',
+        padding: 12
+      }}>
+      <View className="w-full overflow-hidden">
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+          source={img}
+          style={{
+            height: 120, // atau sesuai kebutuhan
+            width: 'auto',
+            borderRadius: 8
+          }}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+      </View>
+      <View style={{}}>
+        <Text
+          style={{
+            textAlign: 'center',
+            padding: 8,
+            fontWeight: 'bold'
+          }}>
+          {title}
+        </Text>
+
+        <Text style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 24, color: 'salmon' }}>
+          {currencyFormat(value)}
+        </Text>
+      </View>
+      {qty < 1 ? (
+        <View>
+          <Pressable
+            style={{
+              padding: 8,
+              backgroundColor: 'salmon',
+              borderRadius: 8
+            }}
+            onPress={() => setQty(qty + 1)}>
+            <Text style={{ textAlign: 'center' }}>Tambah</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row'
+          }}>
+          <Pressable onPress={() => (qty > 0 ? setQty(qty - 1) : setQty(0))} style={style.pressable}>
+            <View>
+              <Ionicons name="remove" size={18} />
+            </View>
+          </Pressable>
+          <TextInput
+            value={`${qty}`}
+            style={{
+              flex: 1,
+              textAlign: 'center'
+            }}
+          />
+          <Pressable onPress={() => setQty(qty + 1)} style={style.pressable}>
+            <View>
+              <Ionicons name="add" size={18} />
+            </View>
+          </Pressable>
+        </View>
+      )}
+    </View>
+  )
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+interface ProductToCo {
+  id?: string
+  quantity?: number
+}
+
+export default function Index() {
+  const [productToCo, setProductToCo] = useState<ProductToCo>({})
+
+  return (
+    <Container>
+      <View style={{ padding: 16 }}>
+        <Text className="text-2xl font-bold mb-4">Penjualan</Text>
+        <View className="">
+          <Search />
+        </View>
+      </View>
+      <View>
+        {dummyData.length ? (
+          <FlatList
+            data={dummyData}
+            renderItem={({ item }) => <Viewer title={item.title} value={item.price} img={item.img} />}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              gap: 16
+            }}
+            columnWrapperStyle={{
+              gap: 16
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+        ) : (
+          <View className="" style={{ paddingHorizontal: 16 }}>
+            <Text className="border border-gray-200 bg-red-50 p-6 text-center rounded-xl mb-4">Tidak ada data</Text>
+          </View>
+        )}
+      </View>
+    </Container>
+  )
+}
+
+const style = StyleSheet.create({
+  pressable: {
+    backgroundColor: 'salmon',
+    padding: 8,
+    borderRadius: 8
+  }
+})
